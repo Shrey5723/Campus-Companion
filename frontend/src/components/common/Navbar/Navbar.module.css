@@ -1,0 +1,78 @@
+.navbar {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--space-6);
+    height: var(--navbar-height);
+    background: var(--navbar-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-secondary);
+    z-index: var(--z-sticky);
+}
+
+.left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.menuBtn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    background: none;
+    border: none;
+}
+
+.menuBtn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+/* Task III: Responsive page title using vw (viewport width) units */
+.pageTitle {
+    font-family: var(--font-heading);
+    font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+    font-weight: var(--weight-bold);
+    color: var(--text-primary);
+}
+
+.right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.greeting {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+.greetingName {
+    font-weight: var(--weight-semibold);
+    color: var(--text-primary);
+}
+
+/* Task IV: Media query breakpoint — hide greeting on mobile, show hamburger */
+@media (max-width: 768px) {
+    .menuBtn {
+        display: flex;
+    }
+
+    .greeting {
+        display: none;
+    }
+
+    .navbar {
+        padding: 0 var(--space-4);
+    }
+}

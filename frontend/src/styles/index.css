@@ -1,0 +1,292 @@
+/* ═══════════════════════════════════════════════════
+   Campus Companion — Global Styles
+   CSS Reset + Base Styles + Responsive Design Tasks
+   ═══════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import './variables.css';
+@import './animations.css';
+
+/* ─── CSS Reset ─── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--weight-regular);
+  line-height: 1.6;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  transition: background-color var(--transition-theme), color var(--transition-theme);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* ═══════════════════════════════════════════════════
+   Task III: Responsive Text Size using "vw" (viewport width) unit
+   
+   Using clamp() with vw units allows text to scale fluidly
+   between a minimum and maximum size based on the viewport width.
+   Formula: clamp(min, preferred-vw, max)
+   ═══════════════════════════════════════════════════ */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-bold);
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+/* Responsive heading sizes using vw units with clamp() for fluid scaling */
+h1 { font-size: clamp(1.75rem, 4vw, 2.25rem); }    /* scales from 28px to 36px */
+h2 { font-size: clamp(1.375rem, 3vw, 1.875rem); }   /* scales from 22px to 30px */
+h3 { font-size: clamp(1.125rem, 2.5vw, 1.5rem); }   /* scales from 18px to 24px */
+h4 { font-size: clamp(1rem, 2vw, 1.25rem); }         /* scales from 16px to 20px */
+h5 { font-size: var(--text-lg); }
+h6 { font-size: var(--text-md); }
+
+/* Responsive stat numbers — large display text uses vw */
+.stat-number {
+  font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+  font-family: var(--font-heading);
+  font-weight: var(--weight-bold);
+}
+
+/* Responsive page title in navbar */
+.page-title-responsive {
+  font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+  font-family: var(--font-heading);
+  font-weight: var(--weight-bold);
+}
+
+p {
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+a {
+  color: var(--accent-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--accent-primary-hover);
+}
+
+
+/* ═══════════════════════════════════════════════════
+   Task II: Responsive Images using width and max-width Properties
+   
+   Images are made responsive by setting max-width: 100%
+   so they never exceed their container, and width adapts
+   to the available space. height: auto preserves aspect ratio.
+   ═══════════════════════════════════════════════════ */
+
+img {
+  /* Task II: width and max-width for responsive images */
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  display: block;
+}
+
+/* Responsive image container — constrains images with max-width */
+.responsive-img {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Brand logo — responsive with max-width constraint */
+.brand-logo {
+  width: 100%;
+  max-width: 56px;
+  height: auto;
+}
+
+
+/* ─── Form Elements Reset ─── */
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  outline: none;
+  border: none;
+  background: none;
+}
+
+/* ─── Lists ─── */
+ul, ol {
+  list-style: none;
+}
+
+
+/* ─── Custom Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: var(--radius-full);
+  transition: background var(--transition-fast);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-primary) transparent;
+}
+
+/* ─── Selection ─── */
+::selection {
+  background-color: var(--accent-primary-light);
+  color: var(--accent-primary);
+}
+
+/* ─── Focus Visible ─── */
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Utility Classes ─── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── Theme Transition ─── */
+body,
+body * {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 0ms;
+}
+
+body.theme-transitioning,
+body.theme-transitioning * {
+  transition-duration: 300ms !important;
+  transition-timing-function: ease !important;
+}
+
+/* ─── Material Symbols ─── */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+/* ─── Bootstrap Overrides ─── */
+/* Ensure Bootstrap doesn't override our custom design tokens */
+.btn:focus-visible {
+  box-shadow: 0 0 0 3px var(--accent-primary-ring);
+}
+
+/* Override Bootstrap body styles to use our tokens */
+.container-fluid {
+  padding-left: var(--space-6);
+  padding-right: var(--space-6);
+}
+
+
+/* ═══════════════════════════════════════════════════
+   Task IV: Media Queries for Responsive Breakpoints
+   
+   Media queries create breakpoints where the layout adapts
+   to different screen sizes. Common breakpoints:
+   - 1200px: Large desktops
+   - 1024px: Laptops / small desktops  
+   - 768px:  Tablets
+   - 640px:  Large phones
+   - 480px:  Small phones
+   ═══════════════════════════════════════════════════ */
+
+/* ─── Responsive utility classes using media queries ─── */
+
+/* Hide on mobile, show on desktop */
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+/* Hide on desktop, show on mobile */
+@media (min-width: 769px) {
+  .show-mobile-only {
+    display: none !important;
+  }
+}
+
+/* Responsive container max-width at different breakpoints */
+@media (max-width: 1200px) {
+  .container-fluid {
+    padding-left: var(--space-5);
+    padding-right: var(--space-5);
+  }
+}
+
+@media (max-width: 768px) {
+  .container-fluid {
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+
+  /* Responsive text adjustments for smaller screens */
+  h1 { font-size: clamp(1.5rem, 5vw, 2rem); }
+  h2 { font-size: clamp(1.25rem, 4vw, 1.625rem); }
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: clamp(1.25rem, 6vw, 1.75rem); }
+}

@@ -1,0 +1,86 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+}
+
+/* ─── Step Indicator ─── */
+.steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.stepDot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    transition: all var(--transition-base);
+    border: 2px solid var(--border-primary);
+    color: var(--text-tertiary);
+    background: var(--bg-secondary);
+}
+
+.stepActive .stepDot {
+    background: var(--accent-gradient);
+    border-color: var(--accent-primary);
+    color: white;
+    box-shadow: var(--shadow-accent);
+}
+
+.stepCompleted .stepDot {
+    background: var(--success);
+    border-color: var(--success);
+    color: white;
+}
+
+.stepLine {
+    width: 40px;
+    height: 2px;
+    background: var(--border-primary);
+    transition: background var(--transition-base);
+}
+
+.stepLineActive {
+    background: var(--accent-primary);
+}
+
+.stepLabel {
+    display: none;
+}
+
+/* ─── Buttons Row ─── */
+.actions {
+    display: flex;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+}
+
+.actions > * {
+    flex: 1;
+}
+
+@media (max-width: 480px) {
+    .row {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,226 @@
+.modalTitle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.subjectDot {
+    width: 10px;
+    height: 10px;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+/* ─── Summary ─── */
+.summaryRow {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-3);
+}
+
+.summaryCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-3);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    gap: var(--space-1);
+}
+
+.summaryCardAccent {
+    border: 1px solid var(--border-accent);
+}
+
+.summaryValue {
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
+    color: var(--text-primary);
+    font-family: var(--font-heading);
+}
+
+.summaryLabel {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+/* ─── Type Breakdown ─── */
+.typeBreakdown {
+    display: flex;
+    gap: var(--space-4);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--border-secondary);
+}
+
+.typeItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.typeLabel {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    font-weight: var(--weight-medium);
+}
+
+.typeValue {
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    font-weight: var(--weight-semibold);
+}
+
+.typeValue small {
+    color: var(--text-tertiary);
+    font-weight: var(--weight-regular);
+}
+
+/* ─── Filter ─── */
+.filterRow {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.filterLabel {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    margin-right: var(--space-1);
+}
+
+.filterBtn {
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.filterBtn:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.filterBtnActive {
+    background: var(--accent-primary-light);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.filterCount {
+    margin-left: auto;
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+}
+
+/* ─── History List ─── */
+.historyList {
+    max-height: 340px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.historyItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    background: var(--bg-tertiary);
+    transition: background var(--transition-fast);
+}
+
+.historyItem:hover {
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow-xs);
+}
+
+.historyDate {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    font-weight: var(--weight-medium);
+    min-width: 120px;
+}
+
+.historyType {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    text-transform: capitalize;
+    min-width: 50px;
+}
+
+.historyStatus {
+    margin-left: auto;
+}
+
+.statusBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-full);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+}
+
+.statusPresent {
+    background: var(--success-light);
+    color: var(--success);
+}
+
+.statusAbsent {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+.toggleBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: var(--text-tertiary);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.toggleBtn:hover {
+    background: var(--accent-primary-light);
+    color: var(--accent-primary);
+}
+
+/* ─── Empty State ─── */
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-8) 0;
+    color: var(--text-tertiary);
+}
+
+.emptyState p {
+    font-size: var(--text-sm);
+    margin: 0;
+}

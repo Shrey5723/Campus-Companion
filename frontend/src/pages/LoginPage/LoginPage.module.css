@@ -1,0 +1,42 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.forgotPassword {
+    text-align: right;
+    margin-top: calc(var(--space-1) * -1);
+}
+
+.forgotLink {
+    font-size: var(--text-sm);
+    color: var(--accent-primary);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+    text-decoration: none;
+}
+
+.forgotLink:hover {
+    color: var(--accent-primary-hover);
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin: var(--space-2) 0;
+}
+
+.dividerLine {
+    flex: 1;
+    height: 1px;
+    background: var(--border-primary);
+}
+
+.dividerText {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}

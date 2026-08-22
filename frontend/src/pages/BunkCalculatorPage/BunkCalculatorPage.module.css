@@ -1,0 +1,197 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+.header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+}
+
+.headerText h2 {
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-1);
+}
+
+.headerText p {
+    font-size: var(--text-sm);
+}
+
+/* ─── Slider ─── */
+.sliderSection {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+}
+
+.sliderRow {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+}
+
+.sliderLabel {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.sliderInput {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: var(--bg-tertiary);
+    outline: none;
+    cursor: pointer;
+}
+
+.sliderInput::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent-gradient);
+    cursor: pointer;
+    box-shadow: var(--shadow-accent);
+    border: 3px solid var(--bg-secondary);
+    transition: transform var(--transition-fast);
+}
+
+.sliderInput::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+}
+
+.sliderValue {
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-bold);
+    font-family: var(--font-heading);
+    color: var(--accent-primary);
+    min-width: 60px;
+    text-align: center;
+}
+
+/* ─── Results Grid ─── */
+.resultsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-4);
+}
+
+.resultCard {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    position: relative;
+    overflow: hidden;
+    transition: all var(--transition-base);
+}
+
+.resultCard::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+}
+
+.resultCard:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.resultCardDAA::before { background: var(--subject-daa); }
+.resultCardCN::before { background: var(--subject-cn); }
+.resultCardFSD::before { background: var(--subject-fsd); }
+.resultCardMI::before { background: var(--subject-mi); }
+.resultCardDAV::before { background: var(--subject-dav); }
+.resultCardML::before { background: var(--subject-ml); }
+
+.resultHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-4);
+}
+
+.resultSubject {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-bold);
+    font-family: var(--font-heading);
+    color: var(--text-primary);
+}
+
+.bunkBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
+}
+
+.bunkBadgePositive {
+    background: var(--success-light);
+    color: var(--success);
+}
+
+.bunkBadgeZero {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+.resultStats {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.resultStatRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: var(--text-sm);
+}
+
+.resultStatLabel {
+    color: var(--text-secondary);
+}
+
+.resultStatValue {
+    font-weight: var(--weight-semibold);
+    color: var(--text-primary);
+}
+
+/* ─── Info Banner ─── */
+.infoBanner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background: var(--info-light);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    color: var(--info);
+}
+
+@media (max-width: 640px) {
+    .resultsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .sliderRow {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

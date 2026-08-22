@@ -1,0 +1,186 @@
+.container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-primary);
+    position: relative;
+    overflow: hidden;
+}
+
+/* ─── Decorative background ─── */
+.bgDecor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* Floating teal orbs — matching Stitch design */
+.bgOrb1 {
+    position: absolute;
+    width: 40vw;
+    height: 40vw;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(13, 148, 136, 0.15), transparent 70%);
+    top: -10%;
+    left: -10%;
+    filter: blur(80px);
+    animation: float 8s ease-in-out infinite;
+}
+
+.bgOrb2 {
+    position: absolute;
+    width: 50vw;
+    height: 50vw;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(20, 184, 166, 0.1), transparent 70%);
+    bottom: -10%;
+    right: -10%;
+    filter: blur(100px);
+    animation: float 10s ease-in-out infinite reverse;
+}
+
+/* Dot grid pattern — matching Stitch design */
+.bgGrid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: radial-gradient(circle at 1px 1px, var(--border-primary) 1px, transparent 0);
+    background-size: 24px 24px;
+    opacity: 0.5;
+}
+
+/* ─── Card — Task II: max-width for responsive container ─── */
+.card {
+    position: relative;
+    z-index: 1;
+    /* Task II: width and max-width for responsive sizing */
+    width: 100%;
+    max-width: 480px;
+    margin: var(--space-4);
+}
+
+.cardInner {
+    background: var(--bg-glass);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--bg-glass-border);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-xl);
+    padding: var(--space-10);
+}
+
+/* ─── Header ─── */
+.header {
+    text-align: center;
+    margin-bottom: var(--space-8);
+}
+
+.logo {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-lg);
+    background: var(--accent-gradient);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    /* Task III: Responsive logo text using vw units */
+    font-size: clamp(1.25rem, 3vw, 1.5rem);
+    font-weight: var(--weight-bold);
+    font-family: var(--font-heading);
+    margin-bottom: var(--space-5);
+    box-shadow: var(--shadow-accent);
+}
+
+.title {
+    /* Task III: Responsive heading using vw units */
+    font-size: clamp(1.5rem, 4vw, 1.875rem);
+    font-weight: var(--weight-bold);
+    color: var(--text-primary);
+    margin-bottom: var(--space-2);
+    font-family: var(--font-heading);
+}
+
+.subtitle {
+    font-size: var(--text-base);
+    color: var(--text-secondary);
+}
+
+/* ─── Footer link ─── */
+.footer {
+    text-align: center;
+    margin-top: var(--space-6);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+.footerLink {
+    color: var(--accent-primary);
+    font-weight: var(--weight-semibold);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+    text-decoration: none;
+}
+
+.footerLink:hover {
+    color: var(--accent-primary-hover);
+}
+
+/* ─── Error Alert ─── */
+.errorAlert {
+    background: var(--danger-light);
+    border: 1px solid var(--danger-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-5);
+    font-size: var(--text-sm);
+    color: var(--danger);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+/* ─── Theme toggle position ─── */
+.themeTogglePos {
+    position: absolute;
+    top: var(--space-6);
+    right: var(--space-6);
+    z-index: 2;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}
+
+/* ─── Register wide card ─── */
+.cardWide {
+    max-width: 560px;
+}
+
+.cardInnerCompact {
+    padding: var(--space-8);
+}
+
+/* ─── Task IV: Media query breakpoints for auth layout ─── */
+@media (max-width: 640px) {
+    .cardInner {
+        padding: var(--space-6);
+    }
+
+    .cardInnerCompact {
+        padding: var(--space-5);
+    }
+
+    .logo {
+        width: 48px;
+        height: 48px;
+    }
+}

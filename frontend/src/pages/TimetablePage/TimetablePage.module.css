@@ -1,0 +1,181 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+.header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+}
+
+.headerText h2 {
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-1);
+}
+
+.headerText p {
+    font-size: var(--text-sm);
+}
+
+.divisionBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    background: var(--accent-primary-light);
+    color: var(--accent-primary);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+}
+
+/* ─── Timetable Grid ─── */
+.timetableWrapper {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.timetable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.timetable th {
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--bg-tertiary);
+    text-align: left;
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.timetable td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border-secondary);
+    vertical-align: top;
+}
+
+.timetable tr:last-child td {
+    border-bottom: none;
+}
+
+.dayCell {
+    font-weight: var(--weight-semibold);
+    color: var(--text-primary);
+    font-size: var(--text-base);
+    white-space: nowrap;
+    min-width: 100px;
+}
+
+.todayRow {
+    background: var(--accent-primary-light);
+}
+
+.todayBadge {
+    display: inline-block;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-bold);
+    color: var(--accent-primary);
+    background: var(--accent-primary-ring);
+    padding: 1px 8px;
+    border-radius: var(--radius-full);
+    margin-left: var(--space-2);
+}
+
+/* ─── Subject Pills ─── */
+.subjectPills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-full);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    transition: transform var(--transition-fast);
+}
+
+.pill:hover {
+    transform: scale(1.05);
+}
+
+.pillTheory {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-primary);
+}
+
+.pillLab {
+    background: var(--accent-primary-light);
+    color: var(--accent-primary);
+    border: 1px solid var(--accent-primary-ring);
+}
+
+.pillDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.noClass {
+    font-size: var(--text-sm);
+    color: var(--text-tertiary);
+    font-style: italic;
+}
+
+/* ─── Legend ─── */
+.legend {
+    display: flex;
+    gap: var(--space-6);
+    padding: var(--space-4) var(--space-6);
+    border-top: 1px solid var(--border-secondary);
+}
+
+.legendItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+.legendDot {
+    width: 10px;
+    height: 10px;
+    border-radius: var(--radius-sm);
+}
+
+.legendTheory {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+}
+
+.legendLab {
+    background: var(--accent-primary-light);
+    border: 1px solid var(--accent-primary-ring);
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+    .timetableWrapper {
+        overflow-x: auto;
+    }
+
+    .timetable {
+        min-width: 600px;
+    }
+}
