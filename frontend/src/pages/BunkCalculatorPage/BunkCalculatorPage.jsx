@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useSelector } from 'react-redux'
 import { motion } from 'framer-motion'
 import PageTransition from '../../components/common/PageTransition/PageTransition'
 import Loader from '../../components/common/Loader/Loader'
@@ -12,7 +13,8 @@ import styles from './BunkCalculatorPage.module.css'
 // ──────────────────────────────────────────────
 
 export default function BunkCalculatorPage() {
-    const [percentage, setPercentage] = useState(75)
+    const attendanceTarget = useSelector(state => state.settings.attendanceTarget) || 75
+    const [percentage, setPercentage] = useState(attendanceTarget)
     const { bunkData, loading, calculate } = useBunkCalculator()
 
     const debouncedCalculate = useCallback(() => {

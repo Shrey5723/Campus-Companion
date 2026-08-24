@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { NavLink, Link } from 'react-router-dom'
 import { useAuth } from '../../../hooks/useAuth'
 import styles from './Sidebar.module.css'

@@ -45,7 +45,7 @@ function loadSubjectOrder() {
 
 export default function DashboardPage() {
     const navigate = useNavigate()
-    const { summary, loading, getSummary } = useAttendance()
+    const { summary, loading, error, getSummary } = useAttendance()
     const { holidays, getHolidays } = useHolidays()
     const settings = useSelector(state => state.settings)
 
@@ -62,12 +62,12 @@ export default function DashboardPage() {
         getHolidays()
     }, [getSummary, getHolidays])
 
-    // Re-fetch summary when it becomes null (invalidated by toggle/bulk mark)
+    // Re-fetch summary when it becomes null (invalidated by toggle/bulk/adjust)
     useEffect(() => {
-        if (!summary && !loading) {
+        if (!summary && !loading && !error) {
             getSummary()
         }
-    }, [summary, loading, getSummary])
+    }, [summary, loading, error, getSummary])
 
     const handleSubjectClick = useCallback((subject) => {
         setSelectedSubject(subject)

@@ -36,6 +36,17 @@ const updateStudentProfile = async (studentId, updateData) => {
         }
     })
 
+    // Merge address so geolocation coords are not wiped when only city/state is sent
+    if (sanitized.address && typeof sanitized.address === 'object') {
+        const existing = await Student.findById(studentId).select('address')
+        const currentAddress = existing?.address
+            ? (typeof existing.address.toObject === 'function'
+                ? existing.address.toObject()
+                : existing.address)
+            : {}
+        sanitized.address = { ...currentAddress, ...sanitized.address }
+    }
+
     const student = await Student.findByIdAndUpdate(
         studentId,
         sanitized,

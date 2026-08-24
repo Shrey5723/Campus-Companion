@@ -30,6 +30,8 @@ const initialForm = {
     city: '',
     state: '',
     fullAddress: '',
+    latitude: '',
+    longitude: '',
     department: '',
     semester: '',
     division: '',
@@ -51,35 +53,68 @@ export default function RegisterPage() {
             return
         }
         setGeoLoading(true)
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const { latitude, longitude } = position.coords
-                try {
-                    const response = await fetch(
-                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
-                    )
-                    const data = await response.json()
-                    if (data?.address) {
-                        const addr = data.address
-                        setForm(prev => ({
-                            ...prev,
-                            city: addr.city || addr.town || addr.village || addr.county || '',
-                            state: addr.state || '',
-                            fullAddress: data.display_name || ''
-                        }))
-                    }
-                } catch {
-                    setLocalError('Failed to fetch address from location')
+        setLocalError('')
+
+        const onSuccess = async (position) => {
+            const { latitude, longitude } = position.coords
+            try {
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+                    { headers: { 'Accept-Language': 'en' } }
+                )
+                const data = await response.json()
+                if (data?.address) {
+                    const addr = data.address
+                    setForm(prev => ({
+                        ...prev,
+                        city: addr.city || addr.town || addr.village || addr.county || '',
+                        state: addr.state || '',
+                        fullAddress: data.display_name || '',
+                        latitude,
+                        longitude
+                    }))
                 }
-                setGeoLoading(false)
-            },
-            (err) => {
-                setGeoLoading(false)
-                let msg = 'Failed to get location'
-                if (err.code === 1) msg = 'Location permission denied'
-                setLocalError(msg)
-            },
-            { enableHighAccuracy: true, timeout: 10000 }
+            } catch {
+                // Even if reverse-geocoding fails, still store coordinates
+                setForm(prev => ({ ...prev, latitude, longitude }))
+                setLocalError('Got coordinates but could not fetch address. Please enter city/state manually.')
+            }
+            setGeoLoading(false)
+        }
+
+        const onError = (err) => {
+            // If high-accuracy attempt failed, retry with low accuracy as fallback
+            if (err.code === 2 || err.code === 3) {
+                navigator.geolocation.getCurrentPosition(
+                    onSuccess,
+                    (fallbackErr) => {
+                        setGeoLoading(false)
+                        if (fallbackErr.code === 1) {
+                            setLocalError('Location permission denied. Please allow location access in your browser settings.')
+                        } else if (fallbackErr.code === 2) {
+                            setLocalError('Location unavailable. Please ensure location services are enabled on your device.')
+                        } else if (fallbackErr.code === 3) {
+                            setLocalError('Location request timed out. Please check your network connection and try again.')
+                        } else {
+                            setLocalError('Failed to get location. Please enter your address manually.')
+                        }
+                    },
+                    { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
+                )
+                return
+            }
+            setGeoLoading(false)
+            if (err.code === 1) {
+                setLocalError('Location permission denied. Please allow location access in your browser settings.')
+            } else {
+                setLocalError('Failed to get location. Please enter your address manually.')
+            }
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            onSuccess,
+            onError,
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
         )
     }
 
@@ -173,7 +208,9 @@ export default function RegisterPage() {
             address: {
                 city: form.city,
                 state: form.state,
-                fullAddress: form.fullAddress
+                fullAddress: form.fullAddress,
+                latitude: form.latitude === '' ? undefined : Number(form.latitude),
+                longitude: form.longitude === '' ? undefined : Number(form.longitude)
             }
         })
 

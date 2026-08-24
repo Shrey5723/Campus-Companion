@@ -5,7 +5,7 @@ import Modal from '../Modal/Modal'
 import Button from '../Button/Button'
 import Loader from '../Loader/Loader'
 import { useToast } from '../Toast/Toast'
-import { fetchSubjectHistory, clearSubjectHistory, toggleAttendanceThunk } from '../../../store/attendanceSlice'
+import { fetchSubjectHistory, clearSubjectHistory, toggleAttendanceThunk, addAdjustmentThunk } from '../../../store/attendanceSlice'
 import styles from './SubjectDetailModal.module.css'
 
 // ──────────────────────────────────────────────
@@ -29,6 +29,11 @@ export default function SubjectDetailModal({ isOpen, onClose, subject }) {
     const { addToast } = useToast()
     const { subjectHistory, subjectHistoryLoading } = useSelector(state => state.attendance)
     const [filter, setFilter] = useState('all') // 'all', 'present', 'absent'
+    const [lectureDate, setLectureDate] = useState(() => new Date().toISOString().split('T')[0])
+    const [lectureType, setLectureType] = useState('theory')
+    const [lectureDelta, setLectureDelta] = useState(1)
+    const [lectureReason, setLectureReason] = useState('')
+    const [lectureSaving, setLectureSaving] = useState(false)
 
     useEffect(() => {
         if (isOpen && subject) {
@@ -51,6 +56,29 @@ export default function SubjectDetailModal({ isOpen, onClose, subject }) {
             })
         }
     }, [subject, dispatch, addToast])
+
+    const handleLectureAdjust = useCallback(async () => {
+        if (!subject || !lectureDate) return
+        setLectureSaving(true)
+        const result = await dispatch(addAdjustmentThunk({
+            date: lectureDate,
+            subject,
+            type: lectureType,
+            adjustment: lectureDelta,
+            reason: lectureReason || (lectureDelta > 0 ? 'Extra lecture' : 'Cancelled lecture')
+        }))
+        setLectureSaving(false)
+        if (result.meta.requestStatus === 'fulfilled') {
+            dispatch(fetchSubjectHistory(subject))
+            addToast({
+                type: 'success',
+                message: `${lectureDelta > 0 ? 'Added extra' : 'Removed'} ${subject} ${lectureType} lecture on ${lectureDate}`
+            })
+            setLectureReason('')
+        } else {
+            addToast({ type: 'error', message: result.payload || 'Failed to update lectures' })
+        }
+    }, [subject, lectureDate, lectureType, lectureDelta, lectureReason, dispatch, addToast])
 
     const handleClose = useCallback(() => {
         dispatch(clearSubjectHistory())
@@ -112,6 +140,60 @@ export default function SubjectDetailModal({ isOpen, onClose, subject }) {
                                 {summary?.lab?.attended || 0}/{summary?.lab?.total || 0}
                                 <small> ({summary?.lab?.percentage || 0}%)</small>
                             </span>
+                        </div>
+                    </div>
+
+                    {/* Add / Remove Lecture */}
+                    <div className={styles.lectureAdjust}>
+                        <div className={styles.lectureAdjustHeader}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>tune</span>
+                            Add / Remove Lecture
+                        </div>
+                        <div className={styles.lectureAdjustRow}>
+                            <input
+                                type="date"
+                                value={lectureDate}
+                                onChange={(e) => setLectureDate(e.target.value)}
+                                className={styles.lectureInput}
+                            />
+                            <select
+                                value={lectureType}
+                                onChange={(e) => setLectureType(e.target.value)}
+                                className={styles.lectureInput}
+                            >
+                                <option value="theory">Theory</option>
+                                <option value="lab">Lab</option>
+                            </select>
+                            <div className={styles.lectureDelta}>
+                                <button
+                                    type="button"
+                                    className={`${styles.lectureDeltaBtn} ${lectureDelta === 1 ? styles.lectureDeltaActive : ''}`}
+                                    onClick={() => setLectureDelta(1)}
+                                >
+                                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>add</span>
+                                    Extra
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`${styles.lectureDeltaBtn} ${lectureDelta === -1 ? styles.lectureDeltaActive : ''}`}
+                                    onClick={() => setLectureDelta(-1)}
+                                >
+                                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>remove</span>
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                        <div className={styles.lectureAdjustRow}>
+                            <input
+                                type="text"
+                                placeholder="Reason (optional)"
+                                value={lectureReason}
+                                onChange={(e) => setLectureReason(e.target.value)}
+                                className={styles.lectureInput}
+                            />
+                            <Button size="sm" onClick={handleLectureAdjust} loading={lectureSaving}>
+                                Save
+                            </Button>
                         </div>
                     </div>
 

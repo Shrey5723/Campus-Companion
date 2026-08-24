@@ -1,11 +1,13 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { motion } from 'framer-motion'
 import PageTransition from '../../components/common/PageTransition/PageTransition'
 import Button from '../../components/common/Button/Button'
 import { useToast } from '../../components/common/Toast/Toast'
 import { updateSetting, resetSettings } from '../../store/settingsSlice'
+import { updateProfileThunk, setUser } from '../../store/authSlice'
 import { useAttendance } from '../../hooks/useAttendance'
+import { useAuth } from '../../hooks/useAuth'
 import { useTheme } from '../../hooks/useTheme'
 import styles from './SettingsPage.module.css'
 
@@ -19,9 +21,17 @@ export default function SettingsPage() {
     const dispatch = useDispatch()
     const { addToast } = useToast()
     const settings = useSelector(state => state.settings)
-    const { theme, setTheme } = useTheme()
+    const { mode, setTheme } = useTheme()
+    const { user } = useAuth()
     const { getSummary } = useAttendance()
     const [semesterDate, setSemesterDate] = useState('')
+    const [savingDivision, setSavingDivision] = useState(false)
+
+    useEffect(() => {
+        if (user?.semesterStartDate) {
+            setSemesterDate(String(user.semesterStartDate).split('T')[0])
+        }
+    }, [user?.semesterStartDate])
 
     const handleSettingChange = useCallback((key, value) => {
         dispatch(updateSetting({ key, value }))
@@ -38,12 +48,27 @@ export default function SettingsPage() {
         try {
             const { attendanceAPI } = await import('../../api/attendance.api')
             await attendanceAPI.setSemesterStart(semesterDate)
+            if (user) {
+                dispatch(setUser({ ...user, semesterStartDate: semesterDate }))
+            }
             getSummary()
             addToast({ type: 'success', message: 'Semester start date updated' })
         } catch {
             addToast({ type: 'error', message: 'Failed to update semester start date' })
         }
-    }, [semesterDate, getSummary, addToast])
+    }, [semesterDate, getSummary, addToast, user, dispatch])
+
+    const handleDivisionChange = useCallback(async (division) => {
+        setSavingDivision(true)
+        const result = await dispatch(updateProfileThunk({ division }))
+        setSavingDivision(false)
+        if (result.meta.requestStatus === 'fulfilled') {
+            getSummary()
+            addToast({ type: 'success', message: `Division set to ${division}` })
+        } else {
+            addToast({ type: 'error', message: result.payload || 'Failed to update division' })
+        }
+    }, [dispatch, getSummary, addToast])
 
     const handleReset = useCallback(() => {
         dispatch(resetSettings())
@@ -87,7 +112,7 @@ export default function SettingsPage() {
                                 {['light', 'dark', 'system'].map(t => (
                                     <button
                                         key={t}
-                                        className={`${styles.themePill} ${theme === t ? styles.themePillActive : ''}`}
+                                        className={`${styles.themePill} ${mode === t ? styles.themePillActive : ''}`}
                                         onClick={() => handleThemeChange(t)}
                                     >
                                         <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
@@ -125,7 +150,12 @@ export default function SettingsPage() {
                                     min="50"
                                     max="100"
                                     value={settings.attendanceTarget}
-                                    onChange={(e) => handleSettingChange('attendanceTarget', parseInt(e.target.value))}
+                                    onChange={(e) => dispatch(updateSetting({
+                                        key: 'attendanceTarget',
+                                        value: parseInt(e.target.value, 10)
+                                    }))}
+                                    onMouseUp={() => addToast({ type: 'success', message: 'Setting updated' })}
+                                    onTouchEnd={() => addToast({ type: 'success', message: 'Setting updated' })}
                                     className={styles.rangeSlider}
                                 />
                                 <span className={styles.rangeValue}>{settings.attendanceTarget}%</span>
@@ -163,6 +193,23 @@ export default function SettingsPage() {
                                     Save
                                 </Button>
                             </div>
+                        </div>
+                        <div className={styles.settingRow}>
+                            <div className={styles.settingInfo}>
+                                <span className={styles.settingLabel}>Division</span>
+                                <span className={styles.settingDesc}>Lab division used to calculate lecture counts</span>
+                            </div>
+                            <select
+                                className={styles.dateInput}
+                                value={user?.division || ''}
+                                disabled={savingDivision}
+                                onChange={(e) => handleDivisionChange(e.target.value)}
+                            >
+                                <option value="" disabled>Select division</option>
+                                {['D1', 'D2', 'D3', 'D4'].map(d => (
+                                    <option key={d} value={d}>{d}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
                 </motion.div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from '../../components/common/Sidebar/Sidebar'
 import Navbar from '../../components/common/Navbar/Navbar'
+import { useSettingsNotifications } from '../../hooks/useSettingsNotifications'
 import styles from './DashboardLayout.module.css'
 
 // ──────────────────────────────────────────────
@@ -23,6 +24,7 @@ const ROUTE_TITLES = {
 export default function DashboardLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const location = useLocation()
+    useSettingsNotifications()
 
     const title = ROUTE_TITLES[location.pathname] || 'Dashboard'
 

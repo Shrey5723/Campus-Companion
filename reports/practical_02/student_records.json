@@ -1,0 +1,35 @@
+{
+  "institute": "College of Engineering & Technology",
+  "academicYear": "2024-2025",
+  "course": "Full Stack Development (Semester 5)",
+  "students": [
+    {
+      "id": "STU001",
+      "name": "Aarav Sharma",
+      "attendancePercentage": 92,
+      "status": "Eligible"
+    },
+    {
+      "id": "STU002",
+      "name": "Diya Patel",
+      "attendancePercentage": 71,
+      "status": "Short Attendance Warning"
+    },
+    {
+      "id": "STU003",
+      "name": "Rohan Verma",
+      "attendancePercentage": 86,
+      "status": "Eligible"
+    },
+    {
+      "id": "STU004",
+      "name": "Ananya Joshi",
+      "attendancePercentage": 95,
+      "status": "Eligible"
+    }
+  ],
+  "gradingPolicy": {
+    "minAttendance": 75,
+    "passMarks": 40
+  }
+}

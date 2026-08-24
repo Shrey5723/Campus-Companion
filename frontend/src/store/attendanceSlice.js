@@ -204,11 +204,13 @@ const attendanceSlice = createSlice({
                 }
                 // Invalidate summary so dashboard re-fetches
                 state.summary = null
+                state.error = null
             })
             // Bulk Mark
             .addCase(bulkMarkThunk.fulfilled, (state) => {
                 // Invalidate summary so dashboard re-fetches
                 state.summary = null
+                state.error = null
             })
             // Bunk Calculator
             .addCase(calculateBunksThunk.pending, (state) => {
@@ -237,6 +239,8 @@ const attendanceSlice = createSlice({
             // Add Adjustment
             .addCase(addAdjustmentThunk.fulfilled, (state, action) => {
                 state.adjustments.unshift(action.payload)
+                state.summary = null
+                state.error = null
             })
             // Remove Adjustment
             .addCase(removeAdjustmentThunk.fulfilled, (state, action) => {
@@ -245,6 +249,8 @@ const attendanceSlice = createSlice({
                     const adjDate = new Date(adj.date).toISOString().split('T')[0]
                     return !(adjDate === date && adj.subject === subject && adj.type === type)
                 })
+                state.summary = null
+                state.error = null
             })
             // Subject History
             .addCase(fetchSubjectHistory.pending, (state) => {

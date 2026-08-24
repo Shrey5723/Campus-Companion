@@ -36,7 +36,9 @@ export default function ProfilePage() {
         clubs: user?.clubs?.join(', ') || '',
         city: user?.address?.city || '',
         state: user?.address?.state || '',
-        fullAddress: user?.address?.fullAddress || ''
+        fullAddress: user?.address?.fullAddress || '',
+        latitude: user?.address?.latitude ?? '',
+        longitude: user?.address?.longitude ?? ''
     })
 
     const handleChange = (e) => {
@@ -59,7 +61,9 @@ export default function ProfilePage() {
             clubs: user?.clubs?.join(', ') || '',
             city: user?.address?.city || '',
             state: user?.address?.state || '',
-            fullAddress: user?.address?.fullAddress || ''
+            fullAddress: user?.address?.fullAddress || '',
+            latitude: user?.address?.latitude ?? '',
+            longitude: user?.address?.longitude ?? ''
         })
     }
 
@@ -83,7 +87,9 @@ export default function ProfilePage() {
             address: {
                 city: form.city,
                 state: form.state,
-                fullAddress: form.fullAddress
+                fullAddress: form.fullAddress,
+                latitude: form.latitude === '' ? null : Number(form.latitude),
+                longitude: form.longitude === '' ? null : Number(form.longitude)
             }
         }
 
@@ -120,7 +126,9 @@ export default function ProfilePage() {
                             ...prev,
                             city: addr.city || addr.town || addr.village || addr.county || '',
                             state: addr.state || '',
-                            fullAddress: data.display_name || ''
+                            fullAddress: data.display_name || '',
+                            latitude,
+                            longitude
                         }))
                         addToast({ type: 'success', message: 'Location detected successfully!' })
                     }
@@ -335,6 +343,13 @@ export default function ProfilePage() {
                         {infoItem('location_city', 'City', user?.address?.city)}
                         {infoItem('map', 'State', user?.address?.state)}
                         {infoItem('home', 'Full Address', user?.address?.fullAddress)}
+                        {infoItem(
+                            'my_location',
+                            'Coordinates',
+                            user?.address?.latitude != null && user?.address?.longitude != null
+                                ? `${user.address.latitude.toFixed?.(5) ?? user.address.latitude}, ${user.address.longitude.toFixed?.(5) ?? user.address.longitude}`
+                                : null
+                        )}
                     </motion.div>
                 </div>
             )}

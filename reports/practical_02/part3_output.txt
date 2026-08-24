@@ -1,0 +1,155 @@
+===============================================================
+   PRACTICAL 2 - TASK III: MULTI-DIMENSIONAL JSON ARRAYS       
+===============================================================
+
+1. Full Multi-Dimensional JSON Structure:
+
+[
+  {
+    "departmentName": "Computer Science & Engineering",
+    "batches": [
+      {
+        "batchName": "Batch 5A",
+        "weeklySchedule": [
+          [
+            "FSD Lab",
+            "Operating Systems",
+            "Break",
+            "Computer Networks",
+            "DSA Practice"
+          ],
+          [
+            "Maths-III",
+            "FSD Lecture",
+            "Break",
+            "OS Lab",
+            "Library Hour"
+          ],
+          [
+            "CN Lab",
+            "Cloud Computing",
+            "Break",
+            "Soft Skills",
+            "Mini Project"
+          ],
+          [
+            "Operating Systems",
+            "FSD Lab",
+            "Break",
+            "AI Basics",
+            "Sports"
+          ],
+          [
+            "Seminar",
+            "Project Review",
+            "Break",
+            "Mentorship",
+            "Coding Club"
+          ]
+        ]
+      },
+      {
+        "batchName": "Batch 5B",
+        "weeklySchedule": [
+          [
+            "Operating Systems",
+            "FSD Lecture",
+            "Break",
+            "CN Lab",
+            "Mini Project"
+          ],
+          [
+            "FSD Lab",
+            "Maths-III",
+            "Break",
+            "Cloud Computing",
+            "Sports"
+          ],
+          [
+            "Computer Networks",
+            "AI Basics",
+            "Break",
+            "OS Lab",
+            "Coding Club"
+          ],
+          [
+            "Soft Skills",
+            "Seminar",
+            "Break",
+            "FSD Lab",
+            "Mentorship"
+          ],
+          [
+            "Project Review",
+            "Operating Systems",
+            "Break",
+            "DSA Practice",
+            "Library Hour"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "departmentName": "Information Technology",
+    "batches": [
+      {
+        "batchName": "Batch 5-IT-1",
+        "weeklySchedule": [
+          [
+            "Web Tech Lab",
+            "Database Systems",
+            "Break",
+            "Data Science",
+            "Python Workshop"
+          ],
+          [
+            "Cyber Security",
+            "Web Tech",
+            "Break",
+            "DBMS Lab",
+            "Self Study"
+          ],
+          [
+            "Data Science Lab",
+            "Mobile App Dev",
+            "Break",
+            "Tech Seminar",
+            "Project"
+          ],
+          [
+            "Database Systems",
+            "Web Tech Lab",
+            "Break",
+            "Cloud Infra",
+            "Open Source Lab"
+          ],
+          [
+            "Project Evaluation",
+            "Cyber Security",
+            "Break",
+            "Mentoring",
+            "Hackathon Prep"
+          ]
+        ]
+      }
+    ]
+  }
+]
+
+---------------------------------------------------------------
+2. Demonstrating Access to Individual Elements Across Dimensions
+---------------------------------------------------------------
+
+[Level 1] First Department: collegeDepartmentTimetable[0].departmentName -> "Computer Science & Engineering"
+[Level 2] Second Batch in CSE: collegeDepartmentTimetable[0].batches[1].batchName -> "Batch 5B"
+[Level 3] Wednesday Slots for Batch 5A: collegeDepartmentTimetable[0].batches[0].weeklySchedule[2] ->
+           ["CN Lab","Cloud Computing","Break","Soft Skills","Mini Project"]
+
+[Level 4 - Precise Element]
+Target: collegeDepartmentTimetable[0].batches[0].weeklySchedule[3][1] (CSE -> Batch 5A -> Thursday (Day 3) -> Slot 2)
+Result: "FSD Lab"
+Target: collegeDepartmentTimetable[1].batches[0].weeklySchedule[4][4] (IT -> Batch 5-IT-1 -> Friday (Day 4) -> Slot 5)
+Result: "Hackathon Prep"
+
+===============================================================
