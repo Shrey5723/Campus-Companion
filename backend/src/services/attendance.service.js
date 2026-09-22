@@ -27,12 +27,12 @@ const {
 
 
 // ──────────────────────────────────────────────
-// Helper: Get the day name from a Date object
+// Helper: Get the day name from a UTC Date object
 // Returns lowercase day name like 'monday', 'tuesday', etc.
 // ──────────────────────────────────────────────
 function getDayName(date) {
     const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
-    return days[date.getDay()]
+    return days[date.getUTCDay()]
 }
 
 // ──────────────────────────────────────────────
@@ -40,8 +40,15 @@ function getDayName(date) {
 // This ensures consistent date comparison without timezone issues.
 // ──────────────────────────────────────────────
 function stripTime(date) {
+    if (!date) return null
+    if (typeof date === 'string') {
+        const parts = date.split('T')[0].split('-').map(Number)
+        if (parts.length === 3) {
+            return new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]))
+        }
+    }
     const d = new Date(date)
-    return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+    return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
 }
 
 // ──────────────────────────────────────────────
@@ -111,7 +118,7 @@ function getScheduledSubjects(date, division) {
 //
 // Returns: { DAA: { theory: 12, lab: 4 }, CN: { theory: 10, lab: 3 }, ... }
 // ──────────────────────────────────────────────
-async function calculateTotalLectures(studentId, division, endDate) {
+async function calculateTotalLectures(studentId, division, endDate, semesterStartDate) {
     // Get holiday dates as a Set for O(1) lookup
     const holidayDates = await holidayService.getHolidayDatesSet(studentId)
 
@@ -122,7 +129,8 @@ async function calculateTotalLectures(studentId, division, endDate) {
     })
 
     // Iterate from semester start to endDate (inclusive)
-    const start = stripTime(SEMESTER_START_DATE)
+    const effectiveStart = semesterStartDate || SEMESTER_START_DATE
+    const start = stripTime(effectiveStart)
     const end = stripTime(endDate)
     const current = new Date(start)
 
@@ -130,28 +138,28 @@ async function calculateTotalLectures(studentId, division, endDate) {
         const dateStr = current.toISOString().split('T')[0] // 'YYYY-MM-DD'
 
         // Skip weekends (Sunday = 0, Saturday = 6)
-        const dayOfWeek = current.getDay()
+        const dayOfWeek = current.getUTCDay()
         if (dayOfWeek === 0) {
             // Sunday — no classes
-            current.setDate(current.getDate() + 1)
+            current.setUTCDate(current.getUTCDate() + 1)
             continue
         }
 
         // Skip if not within any teaching phase
         if (!isTeachingDay(dateStr)) {
-            current.setDate(current.getDate() + 1)
+            current.setUTCDate(current.getUTCDate() + 1)
             continue
         }
 
         // Skip exam periods
         if (isExamPeriod(dateStr)) {
-            current.setDate(current.getDate() + 1)
+            current.setUTCDate(current.getUTCDate() + 1)
             continue
         }
 
         // Skip holidays
         if (holidayDates.has(dateStr)) {
-            current.setDate(current.getDate() + 1)
+            current.setUTCDate(current.getUTCDate() + 1)
             continue
         }
 
@@ -165,13 +173,13 @@ async function calculateTotalLectures(studentId, division, endDate) {
             }
         })
 
-        current.setDate(current.getDate() + 1)
+        current.setUTCDate(current.getUTCDate() + 1)
     }
 
     // Apply lecture adjustments
     // Query all adjustments in the date range and modify totals
     const adjustmentsMap = await lectureAdjustmentService.getAdjustmentsMap(
-        studentId, SEMESTER_START_DATE, endDate
+        studentId, effectiveStart, endDate
     )
 
     // adjustmentsMap keys are 'YYYY-MM-DD_SUBJECT_TYPE' → adjustment (+1 or -1)
@@ -221,15 +229,24 @@ async function getSubjectWiseSummary(studentId) {
 
     // Step 2: Calculate total lectures held till today
     const today = new Date()
-    const totalLectures = await calculateTotalLectures(studentId, student.division, today)
+    const totalLectures = await calculateTotalLectures(
+        studentId,
+        student.division,
+        today,
+        student.semesterStartDate
+    )
 
     // Step 3: Count attended lectures from attendance records
-    // We aggregate attendance records grouped by subject and type
+    // Exclude any dates that are marked as holidays for this student
+    const holidayDates = await holidayService.getHolidayDatesSet(studentId)
+    const holidayDateObjects = Array.from(holidayDates).map(dStr => stripTime(dStr))
+
     const attendedCounts = await Attendance.aggregate([
         {
             $match: {
                 studentId: student._id,
-                isPresent: true
+                isPresent: true,
+                date: { $nin: holidayDateObjects }
             }
         },
         {
@@ -328,8 +345,25 @@ async function getAttendanceByDate(studentId, date) {
         }
     }
 
-    // Get what was scheduled for this date
-    const scheduled = getScheduledSubjects(targetDate, student.division)
+    // Get what was scheduled for this date from timetable
+    let scheduled = getScheduledSubjects(targetDate, student.division)
+
+    // Get lecture adjustments for this date
+    const adjustments = await lectureAdjustmentService.getAdjustmentsForDate(studentId, targetDate)
+
+    // Apply adjustments to scheduled list
+    adjustments.forEach(adj => {
+        if (adj.adjustment > 0) {
+            // Extra lecture: add to scheduled if not already there
+            const exists = scheduled.some(s => s.subject === adj.subject && s.type === adj.type)
+            if (!exists) {
+                scheduled.push({ subject: adj.subject, type: adj.type })
+            }
+        } else if (adj.adjustment < 0) {
+            // Cancelled lecture: remove from scheduled
+            scheduled = scheduled.filter(s => !(s.subject === adj.subject && s.type === adj.type))
+        }
+    })
 
     // Get existing attendance records for this date
     const existingRecords = await Attendance.find({
@@ -358,8 +392,6 @@ async function getAttendanceByDate(studentId, date) {
         }
     })
 
-    // Get lecture adjustments for this date
-    const adjustments = await lectureAdjustmentService.getAdjustmentsForDate(studentId, targetDate)
     const adjustmentRecords = adjustments.map(adj => ({
         subject: adj.subject,
         type: adj.type,
@@ -460,7 +492,7 @@ async function bulkMarkAttendance(studentId, date, records) {
 // have room above the target, the extra room = bunkable lectures.
 // ──────────────────────────────────────────────
 async function calculateBunkableLectures(studentId, desiredPercentage) {
-    const student = await Student.findById(studentId).select('division')
+    const student = await Student.findById(studentId).select('division semesterStartDate')
 
     if (!student || !student.division) {
         const error = new Error('Student not found or division not set')
@@ -470,17 +502,31 @@ async function calculateBunkableLectures(studentId, desiredPercentage) {
 
     // Step 1: Get total lectures held till today
     const today = new Date()
-    const totalHeld = await calculateTotalLectures(studentId, student.division, today)
+    const totalHeld = await calculateTotalLectures(
+        studentId,
+        student.division,
+        today,
+        student.semesterStartDate
+    )
 
     // Step 2: Get total lectures in the entire semester
-    const totalSemester = await calculateTotalLectures(studentId, student.division, SEMESTER_END_DATE)
+    const totalSemester = await calculateTotalLectures(
+        studentId,
+        student.division,
+        SEMESTER_END_DATE,
+        student.semesterStartDate
+    )
 
-    // Step 3: Get attended counts
+    // Step 3: Get attended counts excluding holidays
+    const holidayDates = await holidayService.getHolidayDatesSet(studentId)
+    const holidayDateObjects = Array.from(holidayDates).map(dStr => stripTime(dStr))
+
     const attendedCounts = await Attendance.aggregate([
         {
             $match: {
                 studentId: student._id,
-                isPresent: true
+                isPresent: true,
+                date: { $nin: holidayDateObjects }
             }
         },
         {
@@ -591,7 +637,7 @@ async function setSemesterStartDate(studentId, date) {
 // sorted by date descending. Used by the subject detail modal.
 // ──────────────────────────────────────────────
 async function getSubjectAttendanceHistory(studentId, subject) {
-    const student = await Student.findById(studentId).select('division')
+    const student = await Student.findById(studentId).select('division semesterStartDate')
 
     if (!student || !student.division) {
         const error = new Error('Student not found or division not set')
@@ -599,10 +645,14 @@ async function getSubjectAttendanceHistory(studentId, subject) {
         throw error
     }
 
-    // Get all attendance records for this subject
+    const holidayDates = await holidayService.getHolidayDatesSet(studentId)
+    const holidayDateObjects = Array.from(holidayDates).map(dStr => stripTime(dStr))
+
+    // Get all attendance records for this subject excluding holidays
     const records = await Attendance.find({
         studentId,
-        subject
+        subject,
+        date: { $nin: holidayDateObjects }
     }).sort({ date: -1 })
 
     // Format the records
@@ -615,7 +665,12 @@ async function getSubjectAttendanceHistory(studentId, subject) {
 
     // Get totals for this subject
     const today = new Date()
-    const totalLectures = await calculateTotalLectures(studentId, student.division, today)
+    const totalLectures = await calculateTotalLectures(
+        studentId,
+        student.division,
+        today,
+        student.semesterStartDate
+    )
     const subjectTotals = totalLectures[subject] || { theory: 0, lab: 0 }
 
     // Count attended

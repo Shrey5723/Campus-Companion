@@ -1,4 +1,5 @@
 const Holiday = require('../models/holiday.model')
+const Attendance = require('../models/attendance.model')
 
 // ──────────────────────────────────────────────
 // Holiday Service
@@ -6,23 +7,43 @@ const Holiday = require('../models/holiday.model')
 // Holidays are dates excluded from attendance counting.
 // ──────────────────────────────────────────────
 
+// Helper: Strip time from a date (set to midnight UTC)
+function stripTime(date) {
+    if (!date) return null
+    if (typeof date === 'string') {
+        const parts = date.split('T')[0].split('-').map(Number)
+        if (parts.length === 3) {
+            return new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]))
+        }
+    }
+    const d = new Date(date)
+    return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
+}
+
 // Add a holiday
 // Uses findOneAndUpdate with upsert to avoid duplicates.
 // If the date is already marked as a holiday, it updates the reason.
+// Also cleans up any existing attendance records for that holiday date.
 async function addHoliday(studentId, date, reason = '') {
+    const targetDate = stripTime(date)
+
     const holiday = await Holiday.findOneAndUpdate(
-        { studentId, date },
-        { studentId, date, reason },
+        { studentId, date: targetDate },
+        { studentId, date: targetDate, reason },
         { upsert: true, new: true }
-        // upsert: true  → create if doesn't exist, update if it does
-        // new: true      → return the updated/created document
     )
+
+    // Clean up any attendance records on this holiday date so they don't count toward attendance
+    await Attendance.deleteMany({ studentId, date: targetDate })
+
     return holiday
 }
 
 // Remove a holiday
 async function removeHoliday(studentId, date) {
-    const result = await Holiday.findOneAndDelete({ studentId, date })
+    const targetDate = stripTime(date)
+
+    const result = await Holiday.findOneAndDelete({ studentId, date: targetDate })
 
     if (!result) {
         const error = new Error('Holiday not found for this date')
@@ -41,7 +62,8 @@ async function getHolidays(studentId) {
 
 // Check if a specific date is a holiday for a student
 async function isHoliday(studentId, date) {
-    const holiday = await Holiday.findOne({ studentId, date })
+    const targetDate = stripTime(date)
+    const holiday = await Holiday.findOne({ studentId, date: targetDate })
     return !!holiday
 }
 
@@ -61,13 +83,16 @@ async function getHolidayDatesSet(studentId) {
 
 // Bulk add holidays (used by seed script)
 async function bulkAddHolidays(studentId, holidays) {
-    const operations = holidays.map(h => ({
-        updateOne: {
-            filter: { studentId, date: new Date(h.date) },
-            update: { studentId, date: new Date(h.date), reason: h.reason || '' },
-            upsert: true
+    const operations = holidays.map(h => {
+        const targetDate = stripTime(h.date)
+        return {
+            updateOne: {
+                filter: { studentId, date: targetDate },
+                update: { studentId, date: targetDate, reason: h.reason || '' },
+                upsert: true
+            }
         }
-    }))
+    })
 
     if (operations.length > 0) {
         await Holiday.bulkWrite(operations)

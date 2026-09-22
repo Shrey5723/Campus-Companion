@@ -7,3 +7,4 @@ build/
 .env.local
 .vscode/
 .idea/
+reports/

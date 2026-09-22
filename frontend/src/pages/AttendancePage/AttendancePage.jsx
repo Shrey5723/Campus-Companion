@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../../components/common/PageTransition/PageTransition'
 import Button from '../../components/common/Button/Button'
@@ -6,12 +7,14 @@ import Loader from '../../components/common/Loader/Loader'
 import { useAttendance } from '../../hooks/useAttendance'
 import { useHolidays } from '../../hooks/useHolidays'
 import { useToast } from '../../components/common/Toast/Toast'
+import { fetchTodos, toggleComplete, createTodo } from '../../store/todoSlice'
 import styles from './AttendancePage.module.css'
 
 // ──────────────────────────────────────────────
 // Attendance Page
 // Calendar + Day detail panel with toggles,
-// holiday management, and lecture adjustments
+// holiday management, lecture adjustments,
+// and integrated To-Do task deadlines.
 // Uses Material Symbols Outlined icons
 // ──────────────────────────────────────────────
 
@@ -22,6 +25,7 @@ const MONTHS = [
 ]
 const SUBJECTS = ['DAA', 'CN', 'FSD', 'MI', 'DAV', 'ML']
 const LECTURE_TYPES = ['theory', 'lab']
+const TASK_CATEGORIES = ['General', 'DAA', 'CN', 'FSD', 'MI', 'DAV', 'ML', 'Assignment', 'Exam', 'Project']
 
 function formatDate(date) {
     const y = date.getFullYear()
@@ -31,6 +35,7 @@ function formatDate(date) {
 }
 
 export default function AttendancePage() {
+    const dispatch = useDispatch()
     const { addToast } = useToast()
     const {
         dateAttendance, dateLoading,
@@ -42,6 +47,8 @@ export default function AttendancePage() {
         holidays, loading: holidaysLoading,
         getHolidays, addHoliday, removeHoliday
     } = useHolidays()
+
+    const { todos, loading: todosLoading } = useSelector(state => state.todos)
 
     const today = new Date()
     const [currentMonth, setCurrentMonth] = useState(today.getMonth())
@@ -58,6 +65,14 @@ export default function AttendancePage() {
     const [adjValue, setAdjValue] = useState(1)
     const [adjReason, setAdjReason] = useState('')
 
+    // Quick Task form state
+    const [showTaskForm, setShowTaskForm] = useState(false)
+    const [taskTitle, setTaskTitle] = useState('')
+    const [taskCategory, setTaskCategory] = useState('General')
+    const [taskPriority, setTaskPriority] = useState('medium')
+    const [taskDueTime, setTaskDueTime] = useState('')
+    const [taskSaving, setTaskSaving] = useState(false)
+
     // Management section toggle
     const [showManager, setShowManager] = useState(false)
 
@@ -68,7 +83,28 @@ export default function AttendancePage() {
     useEffect(() => {
         getHolidays()
         getAdjustments()
-    }, [getHolidays, getAdjustments])
+        dispatch(fetchTodos())
+    }, [getHolidays, getAdjustments, dispatch])
+
+    // Group todos by dueDate (YYYY-MM-DD)
+    const todosByDate = useMemo(() => {
+        const map = {}
+        if (Array.isArray(todos)) {
+            todos.forEach(t => {
+                if (t.dueDate) {
+                    const dStr = t.dueDate.split('T')[0]
+                    if (!map[dStr]) map[dStr] = []
+                    map[dStr].push(t)
+                }
+            })
+        }
+        return map
+    }, [todos])
+
+    // Tasks due on the currently selected date
+    const selectedDayTasks = useMemo(() => {
+        return todosByDate[selectedDate] || []
+    }, [todosByDate, selectedDate])
 
     // Calendar helpers
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
@@ -212,6 +248,44 @@ export default function AttendancePage() {
         }
     }, [removeAdjustment, getByDate, selectedDate, getSummary, addToast])
 
+    // ─── Task Actions ───
+    const handleToggleTask = useCallback(async (taskId) => {
+        const result = await dispatch(toggleComplete(taskId))
+        if (result.meta.requestStatus === 'fulfilled') {
+            const isCompleted = result.payload.status === 'completed'
+            addToast({
+                type: 'success',
+                message: `Task ${isCompleted ? 'completed!' : 'marked pending'}`
+            })
+        } else {
+            addToast({ type: 'error', message: result.payload || 'Failed to update task' })
+        }
+    }, [dispatch, addToast])
+
+    const handleQuickAddTask = useCallback(async (e) => {
+        e?.preventDefault()
+        if (!taskTitle.trim()) return
+
+        setTaskSaving(true)
+        const result = await dispatch(createTodo({
+            title: taskTitle.trim(),
+            dueDate: selectedDate,
+            category: taskCategory,
+            priority: taskPriority,
+            dueTime: taskDueTime || null
+        }))
+        setTaskSaving(false)
+
+        if (result.meta.requestStatus === 'fulfilled') {
+            setTaskTitle('')
+            setTaskDueTime('')
+            setShowTaskForm(false)
+            addToast({ type: 'success', message: 'Task added for ' + selectedDate })
+        } else {
+            addToast({ type: 'error', message: result.payload || 'Failed to add task' })
+        }
+    }, [dispatch, taskTitle, selectedDate, taskCategory, taskPriority, taskDueTime, addToast])
+
     // ─── Status Icons/Text ───
     const getStatusIcon = (isPresent) => {
         if (isPresent === true) return <span className={`material-symbols-outlined ${styles.toggleLabelPresent}`} style={{ fontSize: 18 }}>check_circle</span>
@@ -242,6 +316,9 @@ export default function AttendancePage() {
             const dateStr = formatDate(date)
             const isHolidayDay = holidaySet.has(dateStr)
             const hasAdjustment = adjustmentDateSet.has(dateStr)
+            const dayTasks = todosByDate[dateStr] || []
+            const hasTasks = dayTasks.length > 0
+            const pendingTasks = dayTasks.filter(t => t.status !== 'completed')
 
             cells.push(
                 <button
@@ -260,6 +337,14 @@ export default function AttendancePage() {
                     <div className={styles.dayBadges}>
                         {isHolidayDay && <span className={styles.dayBadgeHoliday} title="Holiday">🏖</span>}
                         {hasAdjustment && <span className={styles.dayBadgeAdjust} title="Lecture adjustment">⚡</span>}
+                        {hasTasks && (
+                            <span
+                                className={`${styles.dayBadgeTask} ${pendingTasks.length > 0 ? styles.dayBadgeTaskPending : styles.dayBadgeTaskCompleted}`}
+                                title={`${dayTasks.length} task${dayTasks.length > 1 ? 's' : ''} (${pendingTasks.length} pending)`}
+                            >
+                                📋{dayTasks.length}
+                            </span>
+                        )}
                     </div>
                 </button>
             )
@@ -419,6 +504,162 @@ export default function AttendancePage() {
         )
     }
 
+    // ─── Day Detail: Tasks Section ───
+    const renderDayTasks = () => {
+        const pendingCount = selectedDayTasks.filter(t => t.status !== 'completed').length
+
+        return (
+            <div className={styles.tasksSection}>
+                <div className={styles.tasksHeader}>
+                    <div className={styles.tasksHeaderLeft}>
+                        <span className="material-symbols-outlined" style={{ fontSize: 18, color: 'var(--accent-primary)' }}>
+                            checklist
+                        </span>
+                        <h4 className={styles.tasksHeaderTitle}>
+                            Tasks Due on this Day
+                        </h4>
+                        <span className={`${styles.tasksBadge} ${pendingCount > 0 ? styles.tasksBadgeActive : ''}`}>
+                            {selectedDayTasks.length === 0
+                                ? '0'
+                                : `${selectedDayTasks.length} (${pendingCount} pending)`}
+                        </span>
+                    </div>
+                    <button
+                        className={styles.quickAddBtn}
+                        onClick={() => setShowTaskForm(!showTaskForm)}
+                    >
+                        <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
+                            {showTaskForm ? 'close' : 'add'}
+                        </span>
+                        {showTaskForm ? 'Cancel' : 'Add Task'}
+                    </button>
+                </div>
+
+                {/* Quick Add Task Form */}
+                <AnimatePresence>
+                    {showTaskForm && (
+                        <motion.form
+                            className={styles.quickAddForm}
+                            onSubmit={handleQuickAddTask}
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                        >
+                            <input
+                                type="text"
+                                placeholder="Task title..."
+                                value={taskTitle}
+                                onChange={(e) => setTaskTitle(e.target.value)}
+                                className={styles.quickAddInput}
+                                autoFocus
+                            />
+                            <div className={styles.quickAddRow}>
+                                <select
+                                    value={taskCategory}
+                                    onChange={(e) => setTaskCategory(e.target.value)}
+                                    className={styles.quickAddSelect}
+                                >
+                                    {TASK_CATEGORIES.map(cat => (
+                                        <option key={cat} value={cat}>{cat}</option>
+                                    ))}
+                                </select>
+                                <select
+                                    value={taskPriority}
+                                    onChange={(e) => setTaskPriority(e.target.value)}
+                                    className={styles.quickAddSelect}
+                                >
+                                    <option value="low">Low Priority</option>
+                                    <option value="medium">Medium Priority</option>
+                                    <option value="high">High Priority</option>
+                                </select>
+                                <input
+                                    type="time"
+                                    value={taskDueTime}
+                                    onChange={(e) => setTaskDueTime(e.target.value)}
+                                    className={styles.quickAddTimeInput}
+                                    title="Due time (optional)"
+                                />
+                                <Button size="sm" type="submit" loading={taskSaving}>
+                                    Save Task
+                                </Button>
+                            </div>
+                        </motion.form>
+                    )}
+                </AnimatePresence>
+
+                {/* Tasks List */}
+                {selectedDayTasks.length > 0 ? (
+                    <div className={styles.tasksList}>
+                        {selectedDayTasks.map((task) => {
+                            const isCompleted = task.status === 'completed'
+                            const priorityClass = task.priority === 'high'
+                                ? styles.taskPriorityHigh
+                                : task.priority === 'low'
+                                ? styles.taskPriorityLow
+                                : styles.taskPriorityMedium
+
+                            return (
+                                <motion.div
+                                    key={task._id}
+                                    className={`${styles.taskItem} ${isCompleted ? styles.taskItemCompleted : ''}`}
+                                    initial={{ opacity: 0, y: 5 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    layout
+                                >
+                                    <div className={styles.taskItemLeft}>
+                                        <button
+                                            type="button"
+                                            className={`${styles.taskCheckbox} ${isCompleted ? styles.taskCheckboxChecked : ''}`}
+                                            onClick={() => handleToggleTask(task._id)}
+                                            title={isCompleted ? 'Mark pending' : 'Mark completed'}
+                                        >
+                                            {isCompleted && (
+                                                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
+                                                    check
+                                                </span>
+                                            )}
+                                        </button>
+                                        <div className={styles.taskContent}>
+                                            <div className={`${styles.taskTitle} ${isCompleted ? styles.taskTitleCompleted : ''}`}>
+                                                {task.title}
+                                            </div>
+                                            <div className={styles.taskMeta}>
+                                                <span className={styles.taskCategory}>{task.category || 'General'}</span>
+                                                <span className={priorityClass}>
+                                                    ● {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                                                </span>
+                                                {task.dueTime && (
+                                                    <span className={styles.taskTime}>
+                                                        <span className="material-symbols-outlined" style={{ fontSize: 12 }}>
+                                                            schedule
+                                                        </span>
+                                                        {task.dueTime}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )
+                        })}
+                    </div>
+                ) : (
+                    <div className={styles.tasksEmpty}>
+                        <span>No tasks scheduled for this date</span>
+                        {!showTaskForm && (
+                            <button
+                                className={styles.quickAddBtn}
+                                onClick={() => setShowTaskForm(true)}
+                            >
+                                + Add Task
+                            </button>
+                        )}
+                    </div>
+                )}
+            </div>
+        )
+    }
+
     // ─── Management Section ───
     const renderManagementSection = () => {
         const monthHolidays = holidays.filter(h => {
@@ -556,8 +797,8 @@ export default function AttendancePage() {
         <PageTransition className={styles.page}>
             <div className={styles.header}>
                 <div className={styles.headerText}>
-                    <h2>Attendance Calendar</h2>
-                    <p>Select a date to mark or edit attendance</p>
+                    <h2>Attendance & Schedule</h2>
+                    <p>Select a date to mark attendance, manage holidays, and view task deadlines</p>
                 </div>
             </div>
 
@@ -600,81 +841,87 @@ export default function AttendancePage() {
 
                     {dateLoading ? (
                         <Loader text="Loading..." />
-                    ) : dateAttendance?.isHoliday ? (
-                        <>
-                            {renderHolidayControls()}
-                        </>
-                    ) : dateAttendance?.isTeachingDay === false ? (
-                        <div className={styles.detailMessage}>
-                            <span className={styles.detailMessageIcon}>📅</span>
-                            {dateAttendance.message || 'No lectures scheduled'}
-                            <div style={{ marginTop: 'var(--space-4)' }}>
-                                {renderHolidayControls()}
-                            </div>
-                        </div>
-                    ) : dateAttendance?.records?.length > 0 ? (
-                        <>
-                            {/* Holiday controls at top */}
-                            {renderHolidayControls()}
-
-                            {/* Subject toggles */}
-                            <div className={styles.subjectList}>
-                                {dateAttendance.records.map((record, i) => (
-                                    <motion.div
-                                        key={`${record.subject}-${record.type}`}
-                                        className={styles.subjectItem}
-                                        initial={{ opacity: 0, x: 10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: i * 0.05 }}
-                                    >
-                                        <div className={styles.subjectItemInfo}>
-                                            <span className={styles.subjectItemName}>
-                                                {record.subject}
-                                            </span>
-                                            <span className={styles.subjectItemType}>
-                                                {record.type}
-                                            </span>
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            {getStatusIcon(record.isPresent)}
-                                            {getStatusText(record.isPresent)}
-                                            <button
-                                                className={`${styles.toggle} ${
-                                                    record.isPresent === true ? styles.toggleOn :
-                                                    record.isPresent === false ? styles.toggleOff :
-                                                    styles.toggleNull
-                                                }`}
-                                                onClick={() => handleToggle(record.subject, record.type, record.isPresent)}
-                                                aria-label={`Toggle ${record.subject} ${record.type}`}
-                                            >
-                                                <span className={styles.toggleDot} />
-                                            </button>
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            </div>
-
-                            {/* Bulk actions */}
-                            <div className={styles.bulkActions}>
-                                <Button size="sm" onClick={handleMarkAllPresent}>
-                                    Mark All Present
-                                </Button>
-                                <Button size="sm" variant="secondary" onClick={handleMarkAllAbsent}>
-                                    Mark All Absent
-                                </Button>
-                            </div>
-
-                            {/* Lecture Adjustment controls */}
-                            {renderAdjustmentControls()}
-                        </>
                     ) : (
-                        <div className={styles.detailMessage}>
-                            <span className={styles.detailMessageIcon}>📝</span>
-                            No lectures scheduled for this date
-                            <div style={{ marginTop: 'var(--space-4)' }}>
-                                {renderHolidayControls()}
-                            </div>
-                        </div>
+                        <>
+                            {/* Attendance / Holiday Section */}
+                            {dateAttendance?.isHoliday ? (
+                                renderHolidayControls()
+                            ) : dateAttendance?.isTeachingDay === false ? (
+                                <div className={styles.detailMessage}>
+                                    <span className={styles.detailMessageIcon}>📅</span>
+                                    {dateAttendance.message || 'No lectures scheduled'}
+                                    <div style={{ marginTop: 'var(--space-4)' }}>
+                                        {renderHolidayControls()}
+                                    </div>
+                                </div>
+                            ) : dateAttendance?.records?.length > 0 ? (
+                                <>
+                                    {/* Holiday controls at top */}
+                                    {renderHolidayControls()}
+
+                                    {/* Subject toggles */}
+                                    <div className={styles.subjectList}>
+                                        {dateAttendance.records.map((record, i) => (
+                                            <motion.div
+                                                key={`${record.subject}-${record.type}`}
+                                                className={styles.subjectItem}
+                                                initial={{ opacity: 0, x: 10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: i * 0.05 }}
+                                            >
+                                                <div className={styles.subjectItemInfo}>
+                                                    <span className={styles.subjectItemName}>
+                                                        {record.subject}
+                                                    </span>
+                                                    <span className={styles.subjectItemType}>
+                                                        {record.type}
+                                                    </span>
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                    {getStatusIcon(record.isPresent)}
+                                                    {getStatusText(record.isPresent)}
+                                                    <button
+                                                        className={`${styles.toggle} ${
+                                                            record.isPresent === true ? styles.toggleOn :
+                                                            record.isPresent === false ? styles.toggleOff :
+                                                            styles.toggleNull
+                                                        }`}
+                                                        onClick={() => handleToggle(record.subject, record.type, record.isPresent)}
+                                                        aria-label={`Toggle ${record.subject} ${record.type}`}
+                                                    >
+                                                        <span className={styles.toggleDot} />
+                                                    </button>
+                                                </div>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+
+                                    {/* Bulk actions */}
+                                    <div className={styles.bulkActions}>
+                                        <Button size="sm" onClick={handleMarkAllPresent}>
+                                            Mark All Present
+                                        </Button>
+                                        <Button size="sm" variant="secondary" onClick={handleMarkAllAbsent}>
+                                            Mark All Absent
+                                        </Button>
+                                    </div>
+
+                                    {/* Lecture Adjustment controls */}
+                                    {renderAdjustmentControls()}
+                                </>
+                            ) : (
+                                <div className={styles.detailMessage}>
+                                    <span className={styles.detailMessageIcon}>📝</span>
+                                    No lectures scheduled for this date
+                                    <div style={{ marginTop: 'var(--space-4)' }}>
+                                        {renderHolidayControls()}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Tasks Due on Selected Date */}
+                            {renderDayTasks()}
+                        </>
                     )}
                 </div>
             </div>

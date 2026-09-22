@@ -11,8 +11,15 @@ const LectureAdjustment = require('../models/lectureAdjustment.model')
 
 // Helper: Strip time from a date (set to midnight UTC)
 function stripTime(date) {
+    if (!date) return null
+    if (typeof date === 'string') {
+        const parts = date.split('T')[0].split('-').map(Number)
+        if (parts.length === 3) {
+            return new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]))
+        }
+    }
     const d = new Date(date)
-    return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+    return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
 }
 
 // Add or update a lecture adjustment
